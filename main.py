@@ -1,53 +1,50 @@
 # Reload numbers from the newly uploaded file
 file_path = './source.txt'
 
+# Read the file and load numbers
 with open(file_path, 'r') as file:
     numbers = file.read().splitlines()
 
 # Improved graph-based approach
-from collections import defaultdict, deque
+from collections import defaultdict
 
 # Build a graph where each piece connects to others
 def build_graph(pieces):
     graph = defaultdict(list)
-    for i, piece1 in enumerate(pieces):
-        for j, piece2 in enumerate(pieces):
-            if i != j:  # Avoid self-loops
-                if piece1[-2:] == piece2[:2] or piece1[:2] == piece2[-2:]:
+    for piece1 in pieces:
+        for piece2 in pieces:
+            if piece1 != piece2:  # Avoid self-loops
+                if piece1[-2:] == piece2[:2]:  # Match condition: last 2 chars of one = first 2 chars of another
                     graph[piece1].append(piece2)
     return graph
 
-def find_longest_path(graph, start_piece):
-    visited = set()
-    queue = deque([start_piece])
-    sorted_puzzle = []
+# DFS with memoization to find the longest path
+def dfs(graph, current, visited, memo):
+    if current in memo:
+        return memo[current]
 
-    while queue:
-        current = queue.popleft()
-        if current not in visited:
-            sorted_puzzle.append(current)
-            visited.add(current)
-            # Sort neighbors by the number of connections to prioritize most connected pieces
-            neighbors = sorted(graph[current], key=lambda x: len(graph[x]), reverse=True)
-            for neighbor in neighbors:
-                if neighbor not in visited:
-                    queue.append(neighbor)
-    return sorted_puzzle
+    max_path = []
+    for neighbor in graph[current]:
+        if neighbor not in visited:
+            path = dfs(graph, neighbor, visited | {neighbor}, memo)
+            if len(path) > len(max_path):
+                max_path = path
+
+    result = [current] + max_path
+    memo[current] = result
+    return result
 
 # Build the graph
 graph = build_graph(numbers)
 
-# Find a starting piece (a piece with only one connection, if exists)
-start_piece = None
-for piece, connections in graph.items():
-    if len(connections) == 1:
-        start_piece = piece
-        break
-if not start_piece:
-    # If no single-connection piece, take any as start
-    start_piece = numbers[0]
+# Try DFS from each piece to ensure the best starting point
+longest_path = []
+memo = {}
+for piece in numbers:
+    path = dfs(graph, piece, {piece}, memo)
+    if len(path) > len(longest_path):
+        longest_path = path
 
-# Find the longest path using the improved graph-based approach
-longest_path = find_longest_path(graph, start_piece)
-
-len(longest_path), longest_path
+# Output the results
+print(f"Length of the longest path: {len(longest_path)}")
+print(f"Longest path: {longest_path}")
