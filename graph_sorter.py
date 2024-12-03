@@ -59,6 +59,15 @@ def validate_sequence(sequence):
             return False, i  # Return False and the index where the error occurs
     return True, -1  # If valid, return True
 
+# Merge the sequence into a single number string
+def merge_sequence(sequence):
+    if not sequence:
+        return ""
+    merged = sequence[0]  # Start with the first number
+    for i in range(1, len(sequence)):
+        merged += sequence[i][2:]  # Append the remaining digits after the first two
+    return merged
+
 # Save the sorted sequence to a file
 def save_sequence_to_file(sequence, output_file_path):
     with open(output_file_path, 'w') as file:
@@ -68,7 +77,7 @@ def save_sequence_to_file(sequence, output_file_path):
 
 # Load the data from the file
 file_path = './source.txt'  # Update with your file path
-output_file_path = './sequence.txt'
+output_file_path = './sortedlist.txt'
 
 with open(file_path, 'r') as file:
     numbers = file.read().splitlines()
@@ -102,7 +111,9 @@ if not is_valid:
 else:
     print("The sequence is fully valid.")
 
-print(f"Final sequence: {final_sequence}")
+# Merge the final sequence into a single string
+merged_sequence = merge_sequence(final_sequence)
+print(f"Final sequence: {merged_sequence}")
 
 # Save the final sequence to a file
 if is_valid:
