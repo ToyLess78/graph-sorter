@@ -22,8 +22,8 @@ def find_longest_path(graph, start_piece):
         if len(path) > len(longest_path):
             longest_path = path
 
-        # Sort neighbors by the number of connections to prioritize most connected pieces
-        for neighbor in sorted(graph[current], key=lambda x: len(graph[x]), reverse=True):
+        # Sort neighbors by the number of connections (stable sorting)
+        for neighbor in sorted(graph[current], key=lambda x: (len(graph[x]), x), reverse=True):
             if neighbor not in path and current[-2:] == neighbor[:2]:  # Ensure sequence matches
                 queue.append((neighbor, path + [neighbor]))
 
@@ -33,7 +33,7 @@ def find_longest_path(graph, start_piece):
 def improve_with_remaining(pieces, main_sequence):
     # Find remaining pieces
     used = set(main_sequence)
-    remaining = set(pieces) - used
+    remaining = sorted(set(pieces) - used)  # Sort remaining pieces for consistency
 
     # Integrate remaining pieces into the sequence
     for piece in list(remaining):
@@ -45,10 +45,6 @@ def improve_with_remaining(pieces, main_sequence):
         elif main_sequence[0][:2] == piece[-2:]:  # Match at the start
             main_sequence.insert(0, piece)
             remaining.remove(piece)
-
-    # Exclude completely isolated pieces (they are not valid to add)
-    if remaining:
-        print(f"Excluded isolated pieces: {remaining}")
 
     return main_sequence
 
@@ -86,13 +82,7 @@ with open(file_path, 'r') as file:
 graph = build_graph(numbers)
 
 # Determine a valid starting piece
-start_piece = None
-for piece, connections in graph.items():
-    if len(connections) == 1:  # Start from a node with only one connection if possible
-        start_piece = piece
-        break
-if not start_piece:
-    start_piece = numbers[0]
+start_piece = min((piece for piece, connections in graph.items() if len(connections) == 1), default=numbers[0])
 
 # Find the longest path
 longest_path = find_longest_path(graph, start_piece)
