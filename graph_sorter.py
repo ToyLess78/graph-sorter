@@ -1,4 +1,29 @@
+import os
 from collections import defaultdict, deque
+
+
+# Validate the input file
+def validate_file(file_path):
+    # Check if the file has .txt extension
+    if not file_path.endswith('.txt'):
+        raise ValueError("Invalid file format. The file must be a .txt file.")
+
+    # Check if the file exists
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"The file '{file_path}' does not exist.")
+
+    # Read and validate each line in the file
+    with open(file_path, 'r') as file:
+        lines = file.read().splitlines()
+
+    # Ensure all lines contain 6-digit numbers
+    for line in lines:
+        if not line.isdigit() or len(line) != 6:
+            raise ValueError(f"Invalid line in file: '{line}'. Each line must be a 6-digit number.")
+
+    print("File validation successful.")
+    return lines
+
 
 # Build a graph where each piece connects to others
 def build_graph(pieces):
@@ -9,6 +34,7 @@ def build_graph(pieces):
                 if piece1[-2:] == piece2[:2]:  # Match condition: last 2 of piece1 = first 2 of piece2
                     graph[piece1].append(piece2)
     return graph
+
 
 # Find the longest path in the graph using BFS
 def find_longest_path(graph, start_piece):
@@ -29,6 +55,7 @@ def find_longest_path(graph, start_piece):
 
     return longest_path
 
+
 # Improve the sequence by including remaining elements with strict validation
 def improve_with_remaining(pieces, main_sequence):
     # Find remaining pieces
@@ -48,12 +75,14 @@ def improve_with_remaining(pieces, main_sequence):
 
     return main_sequence
 
+
 # Validate the final sequence
 def validate_sequence(sequence):
     for i in range(len(sequence) - 1):
         if sequence[i][-2:] != sequence[i + 1][:2]:
             return False, i  # Return False and the index where the error occurs
     return True, -1  # If valid, return True
+
 
 # Merge the sequence into a single number string
 def merge_sequence(sequence):
@@ -64,6 +93,7 @@ def merge_sequence(sequence):
         merged += sequence[i][2:]  # Append the remaining digits after the first two
     return merged
 
+
 # Save the sorted sequence to a file
 def save_sequence_to_file(sequence, output_file_path):
     with open(output_file_path, 'w') as file:
@@ -71,12 +101,17 @@ def save_sequence_to_file(sequence, output_file_path):
             file.write(f"{item}\n")
     print(f"Sorted sequence saved to {output_file_path}")
 
-# Load the data from the file
+
+# File paths
 file_path = './source.txt'  # Update with your file path
 output_file_path = './sortedlist.txt'
 
-with open(file_path, 'r') as file:
-    numbers = file.read().splitlines()
+# Validate the file and load the data
+try:
+    numbers = validate_file(file_path)
+except (ValueError, FileNotFoundError) as e:
+    print(e)
+    exit(1)
 
 # Build the graph
 graph = build_graph(numbers)
